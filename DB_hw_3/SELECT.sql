@@ -50,11 +50,17 @@ INNER JOIN Track t ON a.id = t.album_id
 GROUP BY a.album;
 
 -- 4. Все исполнители, которые не выпустили альбомы в 2020 году
-SELECT ar.artist
-FROM Artists ar
-LEFT JOIN Artist_Album aa ON ar.id = aa.artist_id
-LEFT JOIN Album a ON aa.album_id = a.id
-WHERE a.release_year != 2020 OR a.release_year IS NULL;
+SELECT artist
+FROM Artists
+WHERE id NOT IN (
+    SELECT DISTINCT artist_id
+    FROM Artist_Album
+    WHERE album_id IN (
+        SELECT id
+        FROM Album
+        WHERE release_year = 2020
+    )
+);
 
 -- 5. Названия сборников, в которых присутствует конкретный исполнитель "Земфира"
 SELECT DISTINCT c.title
