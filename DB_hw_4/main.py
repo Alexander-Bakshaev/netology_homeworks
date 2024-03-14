@@ -1,5 +1,6 @@
 import psycopg2
 
+
 def create_db(conn):
     try:
         cur = conn.cursor()
@@ -19,8 +20,10 @@ def create_db(conn):
             );
         """)
         conn.commit()
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при создании таблиц:", e)
+
 
 def add_client(conn, name, surname, email, phones=None):
     try:
@@ -35,8 +38,10 @@ def add_client(conn, name, surname, email, phones=None):
                     INSERT INTO phone_book(client_id, phone) VALUES(%s, %s);
                 """, (client_id, phone))
         conn.commit()
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при добавлении клиента:", e)
+
 
 def add_phone(conn, client_id, phone):
     try:
@@ -45,8 +50,10 @@ def add_phone(conn, client_id, phone):
             INSERT INTO phone_book(client_id, phone) VALUES(%s, %s);
         """, (client_id, phone))
         conn.commit()
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при добавлении телефона:", e)
+
 
 def change_client(conn, client_id, name=None, surname=None, email=None, phones=None):
     try:
@@ -55,22 +62,27 @@ def change_client(conn, client_id, name=None, surname=None, email=None, phones=N
             cur.execute("""
                 UPDATE client SET name = %s WHERE client_id = %s;
             """, (name, client_id))
+            conn.commit()
         if surname:
             cur.execute("""
                 UPDATE client SET surname = %s WHERE client_id = %s;
             """, (surname, client_id))
+            conn.commit()
         if email:
             cur.execute("""
                 UPDATE client SET email = %s WHERE client_id = %s;
             """, (email, client_id))
+            conn.commit()
         if phones:
             for phone_id, phone_number in phones.items():
                 cur.execute("""
                     UPDATE phone_book SET phone = %s WHERE phone_id = %s;
                 """, (phone_number, phone_id))
-        conn.commit()
+                conn.commit()
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при изменении клиента:", e)
+
 
 def delete_phone(conn, client_id, phone):
     try:
@@ -79,19 +91,26 @@ def delete_phone(conn, client_id, phone):
             DELETE FROM phone_book WHERE client_id = %s AND phone = %s;
         """, (client_id, phone))
         conn.commit()
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при удалении телефона:", e)
+
 
 def delete_client(conn, client_id):
     try:
         cur = conn.cursor()
         cur.execute("""
             DELETE FROM phone_book WHERE client_id = %s;
-            DELETE FROM client WHERE client_id = %s;
-        """, (client_id, client_id))
+        """, (client_id,))
         conn.commit()
+        cur.execute("""
+            DELETE FROM client WHERE client_id = %s;
+        """, (client_id,))
+        conn.commit()
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при удалении клиента:", e)
+
 
 def find_client(conn, **kwargs):
     try:
@@ -111,9 +130,9 @@ def find_client(conn, **kwargs):
             return rows
         else:
             return []
+        cur.close()
     except psycopg2.Error as e:
         print("Ошибка при поиске клиента:", e)
-
 
 
 try:
