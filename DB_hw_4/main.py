@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import sql
 
 
 def create_db(conn):
@@ -121,10 +122,10 @@ def find_client(conn, **kwargs):
             if key == 'phone':
                 conditions.append("EXISTS (SELECT 1 FROM phone_book WHERE client.client_id = phone_book.client_id AND phone_book.phone = %s)")
             else:
-                conditions.append(f"{key} = %s")
+                conditions.append(sql.Identifier(key) + sql.SQL(" = %s"))
             values.append(value)
         if conditions:
-            query = "SELECT * FROM client WHERE " + " OR ".join(conditions)
+            query = sql.SQL("SELECT * FROM client WHERE ") + sql.SQL(" OR ").join(conditions)
             cur.execute(query, values)
             rows = cur.fetchall()
             return rows
