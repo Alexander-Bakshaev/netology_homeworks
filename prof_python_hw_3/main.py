@@ -1,62 +1,59 @@
+import json
 import requests
 import bs4
-import json
 from fake_headers import Headers
 
+KEYWORDS = ['Django', 'Flask']
 
-def get_headers():
+def get_fake_headers():
     return Headers(os='win', browser='chrome').generate()
 
-
-def load_data_to_json_file(data):
-    with open('vacancies_data.json', 'w', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=2)
-
-
-def main():
-    url = 'https://spb.hh.ru/search/vacancy?area=1&area=2&ored_clusters=true&text=NAME%3Apython+and+DESCRIPTION%3ADjango+and+Flask&order_by=publication_time'
-    print('Загрузка данных...')
-    response = requests.get(url, headers=get_headers())
-
-    if response.status_code == 200:
-        print('Данные успешно загружены.')
-        main_html_data = response.text
-        main_soup = bs4.BeautifulSoup(main_html_data, 'lxml')
-        tag_main_vacancy_serp_content = main_soup.find('main', class_='vacancy-serp-content')
-        vacancies_tags = tag_main_vacancy_serp_content.find_all('div', class_='serp-item serp-item_link')
-        parsed_data = []
-
-        for vacancy_tag in vacancies_tags:
-            h3_tag = vacancy_tag.find('h3', class_='bloko-header-section-3')
-            a_tag = h3_tag.find('a')
-            link = a_tag['href']
-
-            salary_tag = vacancy_tag.find('span', class_='bloko-header-section-2')
-            salary_text = salary_tag.text.replace('\xa0', ' ').replace(' ',
-                                                                       ' ') if salary_tag else 'Зарплата не указана'
-
-            company_section = vacancy_tag.find('div', class_='vacancy-serp-item-company')
-            company_info = company_section.find('div', class_='vacancy-serp-item__info')
-            company_name_section = company_info.find('div',
-                                                     class_='bloko-v-spacing-container bloko-v-spacing-container_base-2')
-            company_name_text = company_name_section.find('div', class_='bloko-text').text.replace('\xa0', ' ').replace(
-                ' ', ' ') if company_name_section else 'Компания не указана'
-
-            city_section = company_info.find('div', {'data-qa': 'vacancy-serp__vacancy-address'})
-            city_text = city_section.text.replace('\xa0', ' ').replace(' ', ' ') if city_section else 'Город не указан'
-
-            parsed_data.append({
-                'link': link,
-                'salary': salary_text,
-                'company': company_name_text,
-                'city': city_text
-            })
-
-        load_data_to_json_file(parsed_data)
-        print('Данные успешно записаны в файл vacancies_data.json.')
-    else:
-        print(f'Ошибка при загрузке данных. Код ошибки: {response.status_code}')
-
+def get_vacancies_info(keywords_list):
+    result_list = []
+    try:
+        print("Получение вакансий...")
+        response = requests.get('https://spb.hh.ru/search/vacancy?text=python&area=1&area=2',
+                                headers=get_fake_headers())
+        response.raise_for_status()
+        html_data = response.text
+        main_soup = bs4.BeautifulSoup(html_data, features='lxml')
+        vacancy_list_container = main_soup.find('div', id='a11y-main-content')
+        vacancies_list = vacancy_list_container.find_all('div', class_='serp-item')
+        print(f"Найдено {len(vacancies_list)} вакансий.")
+        for index, vacancy in enumerate(vacancies_list, start=1):
+            print(f"Обработка вакансии {index} из {len(vacancies_list)}...")
+            vacancy_link = vacancy.find('a', class_='bloko-link').get('href')
+            response_vacancy = requests.get(vacancy_link, headers=get_fake_headers())
+            response_vacancy.raise_for_status()
+            vacancy_html_data = response_vacancy.text
+            vacancy_soup = bs4.BeautifulSoup(vacancy_html_data, features='lxml')
+            if vacancy_soup:
+                vacancy_description = vacancy_soup.find('div', class_='g-user-content').text
+                for keyword in keywords_list:
+                    if keyword in vacancy_description:
+                        salary_tag = vacancy_soup.find('div', {'data-qa': 'vacancy-salary'})
+                        salary = ' '.join(salary_tag.text.split()) if salary_tag else None
+                        company_name_tag = vacancy_soup.find('span', class_='vacancy-company-name').text.strip()
+                        company_name = ' '.join(company_name_tag.split())
+                        city_tag = vacancy_soup.find('span', {'data-qa': 'vacancy-view-raw-address'})
+                        city = (city_tag.text.strip().split(', ')[0] if city_tag
+                                else
+                                vacancy_soup.find('p', {'data-qa': 'vacancy-view-location'}).text.strip().split(', ')[
+                                    0])
+                        result_list.append({
+                            'link': vacancy_link,
+                            'salary': salary,
+                            'company': company_name,
+                            'city': city
+                        })
+                        print(
+                            f"Найдена подходящая вакансия: {company_name}, {city}, Зарплата: {salary}, Ссылка: {vacancy_link}")
+                        break
+        with open('vacancies_data.json', 'w', encoding='utf-8') as file:
+            json.dump(result_list, file, ensure_ascii=False, indent=2)
+            print("Данные успешно записаны в 'vacancies_data.json'")
+    except requests.exceptions.RequestException as error:
+        print('Ошибка при выполнении запроса:', error)
 
 if __name__ == '__main__':
-    main()
+    get_vacancies_info(KEYWORDS)
