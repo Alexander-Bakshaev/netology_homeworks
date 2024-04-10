@@ -1,0 +1,32 @@
+[
+  {
+    "link": "https://spb.hh.ru/vacancy/94010611?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "не указана",
+    "company": "ООО Дивлаб",
+    "city": "Москва"
+  },
+  {
+    "link": "https://spb.hh.ru/vacancy/95113056?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "не указана",
+    "company": "MaxiBooking",
+    "city": "Москва"
+  },
+  {
+    "link": "https://spb.hh.ru/vacancy/95917860?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "не указана",
+    "company": "ООО ПУЛЬС АЙТИМ",
+    "city": "Химки"
+  },
+  {
+    "link": "https://spb.hh.ru/vacancy/95778303?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "до 280 000 ₽ на руки",
+    "company": "evrone.ru",
+    "city": "Москва"
+  },
+  {
+    "link": "https://spb.hh.ru/vacancy/93657260?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "от 250 000 ₽ на руки",
+    "company": "HR Consulting",
+    "city": "Москва"
+  }
+]
