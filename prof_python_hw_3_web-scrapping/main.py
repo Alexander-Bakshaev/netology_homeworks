@@ -51,7 +51,7 @@ def get_vacancies_info(keywords_list):
                         break
         print(f"Всего подходящих вакансий: {len(result_list)}")
         with open('vacancies_data.json', 'w', encoding='utf-8') as file:
-            json.dump(result_list, file, ensure_ascii=False, indent=2)
+            json.dump(result_list, file, ensure_ascii=False, indent=4)
             print("Данные успешно записаны в 'vacancies_data.json'")
     except requests.exceptions.RequestException as error:
         print('Ошибка при выполнении запроса:', error)
